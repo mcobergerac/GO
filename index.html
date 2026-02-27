@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTS MCO - E5 MASTER TOTAL</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root { --primary: #2c3e50; --gold: #d4af37; --success: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--primary); margin: 0; padding: 10px; }
+        #container { max-width: 1000px; margin: 20px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border-top: 10px solid var(--primary); }
+        .stats-bar { display: flex; justify-content: space-around; background: var(--primary); color: white; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-weight: bold; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        button { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; transition: 0.2s; padding: 15px; }
+        .btn-folder { background: #fff; border: 2px solid var(--primary); color: var(--primary); text-align: left; }
+        .btn-folder:hover { background: var(--primary); color: white; }
+        .mission-box { background: #fefefe; border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 4px; }
+        .ans-btn { display: block; width: 100%; margin: 10px 0; background: #fff; border: 1.5px solid #ddd; text-align: left; padding: 15px; font-size: 1rem;}
+        .ans-btn:hover { border-color: var(--gold); background: #fffdf5; }
+        .feedback { padding: 15px; border-radius: 6px; margin: 15px 0; display: none; font-weight: bold; }
+        .help-card { background: #fff9db; border: 1px solid #ffe066; padding: 15px; margin-top: 15px; font-size: 0.95rem; display: none; }
+        table { border-collapse: collapse; width: 100%; margin: 15px 0; font-size: 0.9rem; }
+        table, th, td { border: 1px solid #555; }
+        th { background-color: #eee; padding: 10px; text-align: center; }
+        td { padding: 8px; text-align: right; }
+    </style>
+</head>
+<body>
+
+<div id="container">
+    <div class="stats-bar">
+        <div>⏳ <span id="timer">03:00</span></div>
+        <div>📦 <span id="delivery-health">100%</span> Service</div>
+        <div>🏆 Score: <span id="score">0</span></div>
+    </div>
+
+    <div id="menu-screen">
+        <h2 style="text-align:center">🚀 Générateur E5 (Référentiel Complet)</h2>
+        <div class="menu-grid" id="menu-list"></div>
+    </div>
+
+    <div id="game-screen" style="display:none;">
+        <div id="context" class="mission-box"></div>
+        <div id="question" style="font-size: 1.1rem; margin-bottom: 20px; font-weight: 600;"></div>
+        <div id="answers"></div>
+        <div id="feedback" class="feedback"></div>
+        <button onclick="document.getElementById('help').style.display='block'" style="background:var(--gold); color:white; width:100%">💡 Formulaire ($\LaTeX$)</button>
+        <div id="help" class="help-card"></div>
+        
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button onclick="location.reload()" style="flex:1; background:#bdc3c7;">🏠 Menu</button>
+            <button id="next-btn" onclick="generateMission()" style="flex:2; background:var(--success); color:white; display:none;">Mission Suivante ⮕</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let score = 0, serviceRate = 100, timeLeft = 180, timer, currentTopic = "";
+
+// --- LISTE COMPLÈTE DES THÈMES ---
+const topics = {
+    "1. Bilan & Trésorerie (Fred)": genBilan,
+    "2. SIG & Rentabilité (Fred)": genSIG,
+    "3. Investissement & VAN (Gamm'Vert)": genVAN,
+    "4. Gestion des Prix (Celio)": genPrix,
+    "5. Performance & Tableau de Bord": genTdB,
+    "6. Gestion des Stocks (Fnac)": genStock,
+    "7. Approvisionnement (Leclerc)": genAppro
+};
+
+function initMenu() {
+    const list = document.getElementById('menu-list');
+    Object.keys(topics).forEach(topic => {
+        const b = document.createElement('button');
+        b.className = 'btn-folder';
+        b.innerHTML = `📂 <strong>${topic}</strong><br><small>Générer une mission...</small>`;
+        b.onclick = () => start(topic);
+        list.appendChild(b);
+    });
+}
+
+function start(topic) {
+    currentTopic = topic;
+    document.getElementById('menu-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'block';
+    startTimer();
+    generateMission();
+}
+
+function startTimer() {
+    timer = setInterval(() => {
+        timeLeft--;
+        let m = Math.floor(timeLeft/60), s = timeLeft%60;
+        document.getElementById('timer').innerText = `${m}:${s<10?'0':''}${s}`;
+        if(timeLeft <= 0) endGame("Temps écoulé ! Vos livraisons sont en retard.");
+    }, 1000);
+}
+
+// --- GÉNÉRATEUR 1 : BILAN FONCTIONNEL ---
+function genBilan() {
+    let rs = Math.floor(Math.random() * 50 + 200) * 1000;
+    let es = Math.floor(Math.random() * 50 + 150) * 1000;
+    let ac = Math.floor(Math.random() * 30 + 30) * 1000;
+    let pc = Math.floor(Math.random() * 30 + 50) * 1000;
+    let frng = rs - es;
+    let bfr = ac - pc;
+    let tn = frng - bfr;
+    let ctx = `<strong>Contexte :</strong> Analyse du bilan fonctionnel.<br>
+    <table>
+        <tr><th>Actif</th><th>Montant (€)</th><th>Passif</th><th>Montant (€)</th></tr>
+        <tr><td>Emplois Stables</td><td>${es.toLocaleString('fr-FR')}</td><td>Ressources Stables</td><td>${rs.toLocaleString('fr-FR')}</td></tr>
+        <tr><td>Actif Circulant</td><td>${ac.toLocaleString('fr-FR')}</td><td>Passif Circulant</td><td>${pc.toLocaleString('fr-FR')}</td></tr>
+    </table>`;
+    return {
+        ctx: ctx,
+        q: "Calculez le FRNG, le BFR et la Trésorerie Nette.",
+        a: [`FRNG: ${frng/1000}k | BFR: ${bfr/1000}k | TN: ${tn/1000}k`, `FRNG: ${frng/1000}k | BFR: ${-bfr/1000}k | TN: ${frng/1000-bfr/1000}k`, `FRNG: ${es/1000}k | BFR: ${ac/1000}k | TN: 0k`],
+        c: 0,
+        h: "$$FRNG = \\text{Ressources Stables} - \\text{Emplois Stables}$$\n$$BFR = \\text{Actif Circulant} - \\text{Passif Circulant}$$\n$$TN = FRNG - BFR$$",
+        s: `FRNG = ${rs/1000} - ${es/1000} = ${frng/1000}k. BFR = ${ac/1000} - ${pc/1000} = ${bfr/1000}k.`
+    };
+}
+
+// --- GÉNÉRATEUR 2 : SIG ---
+function genSIG() {
+    let ca = Math.floor(Math.random() * 500 + 300) * 1000;
+    let achat = Math.floor(ca * 0.6);
+    let marge = ca - achat;
+    let charges = Math.floor(marge * 0.4);
+    let ctx = `<strong>Contexte :</strong> Analyse des SIG.<br>
+    <table>
+        <tr><th>Libellé</th><th>Montant (€)</th></tr>
+        <tr><td>Chiffre d'Affaires</td><td>${ca.toLocaleString('fr-FR')}</td></tr>
+        <tr><td>Achats de marchandises</td><td>${achat.toLocaleString('fr-FR')}</td></tr>
+        <tr><td>Autres charges</td><td>${charges.toLocaleString('fr-FR')}</td></tr>
+    </table>`;
+    return {
+        ctx: ctx,
+        q: "Calculez la Marge Commerciale et le Résultat d'exploitation.",
+        a: [`Marge: ${marge/1000}k€ | Rès: ${(marge-charges)/1000}k€`, `Marge: ${marge/1000}k€ | Rès: ${(marge+charges)/1000}k€`, `Marge: ${achat/1000}k€ | Rès: ${charges/1000}k€`],
+        c: 0,
+        h: "$$\\text{Marge Commerciale} = CA - \\text{Achats Marchandises}$$\n$$\\text{Résultat Exploitation} = \\text{Marge} - \\text{Charges}$$",
+        s: `Marge = ${ca} - ${achat} = ${marge}€. Rès = ${marge} - ${charges} = ${marge-charges}€.`
+    };
+}
+
+// --- GÉNÉRATEUR 3 : INVESTISSEMENT ---
+function genVAN() {
+    let inv = Math.floor(Math.random() * 20 + 30) * 1000;
+    let cf = Math.floor(Math.random() * 5 + 10) * 1000;
+    let van = (cf * 2.72) - inv; // Approximation taux 5% sur 3 ans
+    let ctx = `<strong>Contexte :</strong> Projet investissement.<br>
+    Investissement initial : ${inv.toLocaleString('fr-FR')}€.<br>
+    Flux nets de trésorerie annuels : ${cf.toLocaleString('fr-FR')}€ sur 3 ans.<br>
+    Somme des cash-flows actualisés : ${(cf*2.72).toFixed(0)}€`;
+    return {
+        ctx: ctx,
+        q: "Quelle est la VAN et le projet est-il rentable ?",
+        a: [`VAN: ${van.toLocaleString('fr-FR')}€ | Rentable`, `VAN: ${(van-1000).toLocaleString('fr-FR')}€ | Rentable`, `VAN: ${(van+1000).toLocaleString('fr-FR')}€ | Non rentable`],
+        c: van > 0 ? 0 : 2,
+        h: "$$VAN = \\sum CF_{actualisés} - \\text{Investissement Initial}$$",
+        s: `VAN = ${(cf*2.72).toFixed(0)} - ${inv} = ${van}€.`
+    };
+}
+
+// --- GÉNÉRATEUR 4 : PRIX ---
+function genPrix() {
+    let paht = Math.floor(Math.random() * 50 + 10);
+    let marge = Math.floor(Math.random() * paht + 10);
+    let pvht = paht + marge;
+    let tauxMarque = ((marge / pvht) * 100).toFixed(1);
+    let ctx = `<strong>Contexte :</strong> Marge sur nouveau produit.<br>
+    <table>
+        <tr><th>Élément</th><th>Montant (€)</th></tr>
+        <tr><td>Prix d'Achat HT</td><td>${paht.toLocaleString('fr-FR')}</td></tr>
+        <tr><td>Marge souhaitée HT</td><td>${marge.toLocaleString('fr-FR')}</td></tr>
+    </table>`;
+    return {
+        ctx: ctx,
+        q: "Calculez le Taux de Marque.",
+        a: [`${tauxMarque}%`, `${((marge/paht)*100).toFixed(1)}%`, `${(100-tauxMarque).toFixed(1)}%`],
+        c: 0,
+        h: "$$TauxMarque = \\left( \\frac{\\text{Marge}}{\\text{Prix Vente HT}} \\right) \\times 100$$",
+        s: `PVHT = ${paht} + ${marge} = ${pvht}€. Taux = (${marge} / ${pvht}) * 100 = ${tauxMarque}%.`
+    };
+}
+
+// --- GÉNÉRATEUR 5 : TABLEAU DE BORD ---
+function genTdB() {
+    let obj = Math.floor(Math.random() * 50 + 100) * 1000;
+    let real = Math.floor(Math.random() * obj/1000 + obj/1000 * 0.5) * 1000;
+    let tick = Math.floor(Math.random() * 500 + 1500);
+    let realRate = ((real / obj) * 100).toFixed(1);
+    let panier = (real / tick).toFixed(2);
+    let ctx = `<strong>Contexte :</strong> Suivi mensuel.<br>
+    <table>
+        <tr><th>Indicateur</th><th>Objectif</th><th>Réalisé</th></tr>
+        <tr><td>CA (€)</td><td>${obj.toLocaleString('fr-FR')}</td><td>${real.toLocaleString('fr-FR')}</td></tr>
+        <tr><td>Nombre de Tickets</td><td>-</td><td>${tick}</td></tr>
+    </table>`;
+    return {
+        ctx: ctx,
+        q: "Calculez le taux de réalisation et le panier moyen.",
+        a: [`Réal: ${realRate}% | Panier: ${panier}€`, `Réal: ${(realRate-5).toFixed(1)}% | Panier: ${panier}€`, `Réal: ${realRate}% | Panier: ${(panier*1.1).toFixed(2)}€`],
+        c: 0,
+        h: "$$TauxReal = \\left( \\frac{\\text{Réalisé}}{\\text{Objectif}} \\right) \\times 100$$\n$$PanierMoyen = \\frac{CA}{\\text{Tickets}}$$",
+        s: `Taux = (${real/1000} / ${obj/1000}) * 100 = ${realRate}%.`
+    };
+}
+
+// --- GÉNÉRATEUR 6 : STOCKS ---
+function genStock() {
+    let type = Math.random();
+    if (type < 0.5) {
+        let ca = Math.floor(Math.random() * 500 + 200) * 1000;
+        let stockMoyen = Math.floor(ca / (Math.random() * 5 + 2));
+        let rotation = (ca / stockMoyen).toFixed(1);
+        let couverture = Math.round(360 / rotation);
+        let ctx = `<strong>Contexte :</strong> Analyse du stock.<br>
+        CA Annuel : ${ca.toLocaleString('fr-FR')}€.<br>
+        Stock Moyen : ${stockMoyen.toLocaleString('fr-FR')}€.`;
+        return {
+            ctx: ctx,
+            q: "Calculez le taux de rotation et le taux de couverture.",
+            a: [`Rot: ${rotation} | Couv: ${couverture} jours`, `Rot: ${couverture} | Couv: ${rotation} jours`, `Rot: ${(rotation*2).toFixed(1)} | Couv: ${Math.round(couverture/2)} jours`],
+            c: 0,
+            h: "$$\\text{Taux Rotation} = \\frac{CA}{\\text{Stock Moyen}}$$\n$$\\text{Taux Couverture} = \\frac{360}{\\text{Taux Rotation}}$$",
+            s: `Rot = ${ca} / ${stockMoyen} = ${rotation}.`
+        };
+    } else {
+        let consoJ = Math.floor(Math.random() * 50 + 10);
+        let delai = Math.floor(Math.random() * 10 + 3);
+        let stockSecu = Math.floor(Math.random() * 100 + 50);
+        let ptCommande = (consoJ * delai) + stockSecu;
+        let ctx = `<strong>Contexte :</strong> Gestion des seuils.<br>
+        Consommation journalière : ${consoJ} unités.<br>
+        Délai de livraison : ${delai} jours.<br>
+        Stock de sécurité : ${stockSecu} unités.`;
+        return {
+            ctx: ctx,
+            q: "Calculez le stock d'alerte (point de commande).",
+            a: [`${ptCommande} unités`, `${ptCommande+stockSecu} unités`, `${consoJ*delai} unités`],
+            c: 0,
+            h: "$$\\text{Pt Commande} = (\\text{Conso} \\times \\text{Délai}) + \\text{Stock Sécurité}$$",
+            s: `PC = (${consoJ} * ${delai}) + ${stockSecu} = ${ptCommande} unités.`
+        };
+    }
+}
+
+// --- GÉNÉRATEUR 7 : APPROVISIONNEMENT ---
+function genAppro() {
+    let stockInit = Math.floor(Math.random() * 500 + 200);
+    let consoS1 = Math.floor(Math.random() * 100 + 50);
+    let consoS2 = Math.floor(Math.random() * 100 + 50);
+    let receptionS2 = Math.floor(Math.random() * 300 + 100);
+    
+    let ctx = `<strong>Contexte :</strong> Programme appro. sur 2 semaines.<br>
+    <table>
+        <tr><th>Période</th><th>Stock Initial</th><th>Consommation</th><th>Réception</th><th>Stock Final</th></tr>
+        <tr><td>S1</td><td>${stockInit}</td><td>${consoS1}</td><td>0</td><td>?</td></tr>
+        <tr><td>S2</td><td>?</td><td>${consoS2}</td><td>${receptionS2}</td><td>?</td></tr>
+    </table>`;
+    
+    let sf1 = stockInit - consoS1;
+    let si2 = sf1;
+    let sf2 = si2 + receptionS2 - consoS2;
+    
+    return {
+        ctx: ctx,
+        q: "Quelles sont les valeurs du Stock Final S1 et Stock Final S2 ?",
+        a: [`S1: ${sf1} | S2: ${sf2}`, `S1: ${sf1} | S2: ${sf2+receptionS2}`, `S1: ${sf1-consoS2} | S2: ${sf2}`],
+        c: 0,
+        h: "$$\\text{Stock Final} = \\text{Stock Initial} - \\text{Conso} + \\text{Réception}$$",
+        s: `SF1 = ${stockInit} - ${consoS1} = ${sf1}. SF2 = ${sf1} + ${receptionS2} - ${consoS2} = ${sf2}.`
+    };
+}
+
+function generateMission() {
+    document.getElementById('feedback').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+    document.getElementById('help').style.display = 'none';
+    
+    let mission = topics[currentTopic]();
+    
+    document.getElementById('context').innerHTML = mission.ctx;
+    document.getElementById('question').innerText = mission.q;
+    document.getElementById('help').innerHTML = `<strong>Formulaire Technique :</strong><br>${mission.h}`;
+    
+    MathJax.typesetPromise();
+    
+    const ansList = document.getElementById('answers');
+    ansList.innerHTML = "";
+    mission.a.forEach((t, i) => {
+        const b = document.createElement('button');
+        b.className = 'ans-btn';
+        b.innerText = t;
+        b.onclick = () => {
+            const f = document.getElementById('feedback');
+            f.style.display = 'block';
+            if(i === mission.c) {
+                f.innerHTML = "✅ VALIDÉ ! " + mission.s; f.style.background = "#d4edda"; f.style.color = "#155724";
+                score += 20;
+            } else {
+                f.innerHTML = "❌ ERREUR ! " + mission.s; f.style.background = "#f8d7da"; f.style.color = "#155724";
+                serviceRate -= 10;
+            }
+            updateUI();
+            document.getElementById('next-btn').style.display = 'block';
+            if(serviceRate <= 50) endGame("Taux de service trop bas ! Les clients annulent leurs commandes.");
+        };
+        ansList.appendChild(b);
+    });
+}
+
+function updateUI() {
+    document.getElementById('delivery-health').innerText = serviceRate + "%";
+    document.getElementById('score').innerText = score;
+}
+
+function endGame(m) {
+    clearInterval(timer);
+    alert(m + "\nScore final : " + score + "\nTaux de service : " + serviceRate + "%");
+    location.reload();
+}
+
+window.onload = initMenu;
+</script>
+</body>
+</html>
